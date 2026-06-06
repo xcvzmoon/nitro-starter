@@ -12,13 +12,13 @@ Create your API and deploy it anywhere with this Nitro starter.
 - **Redis** — Nitro storage driver for caching
 - **WebSocket** — real-time two-way communication via `server/routes/ws.ts`
 - **SSE** — server-sent events via `server/routes/sse.ts`
+- **Email** — transactional email via [unemail](https://unemail.dev) with SMTP driver, retry, circuit breaker, and logging middleware
 - **Linting & formatting** — [oxc](https://oxc.rs/) toolchain: `oxfmt` for formatting, `oxlint` + `oxlint-tsgolint` for linting
 - **Changelog generation** — `changelogen` for automated releases
 - **Pre-commit hooks** — `husky` + `lint-staged` for auto-formatting and linting on commit
 
 ### Planned
 
-- **Mailing** — transactional email integration
 - **Docker** — containerized development & deployment
 
 ## Getting started
@@ -31,7 +31,7 @@ pnpm install
 pnpm dev
 ```
 
-Edit `.env` with your database, Redis, and S3 credentials as needed.
+Edit `.env` with your database, Redis, S3, and SMTP credentials as needed.
 
 ## Scripts
 
@@ -101,6 +101,47 @@ Configuration is in `drizzle.config.ts`. Key options:
 
 Credentials are validated with Zod at config-load time from the `DB_*` environment variables. If a variable is missing or invalid, Drizzle will fail with a clear error message.
 
+## Email
+
+Transactional email powered by [unemail](https://unemail.dev) with an SMTP driver. Configuration is done via environment variables:
+
+| Variable        | Description                  |
+| --------------- | ---------------------------- |
+| `SMTP_HOST`     | SMTP server hostname         |
+| `SMTP_PORT`     | SMTP server port             |
+| `SMTP_SECURE`   | Use SSL/TLS (`true`/`false`) |
+| `SMTP_USER`     | SMTP authentication user     |
+| `SMTP_PASSWORD` | SMTP authentication password |
+| `GMAIL_EMAIL`   | Default sender email address |
+
+Credentials are validated with Zod at startup. The driver is wrapped with retry (full-jitter backoff, 3 retries), circuit breaker (5 failures, 30s cooldown), and logging middleware (redacted local parts).
+
+### Usage
+
+```ts
+import { sendEmail } from '~/server/lib/unemail/utils';
+
+const { data, error } = await sendEmail({
+  to: 'user@example.com',
+  subject: 'Hello',
+  text: 'Plain text body',
+  html: '<p>HTML body</p>',
+});
+```
+
+### Example endpoint
+
+`POST /api/email` — accepts `multipart/form-data` with fields `to`, `subject`, `text`, `html`:
+
+```bash
+curl -X POST http://localhost:3000/api/email \
+  -F to=user@example.com \
+  -F subject=Hello \
+  -F text="Hello world"
+```
+
+Returns the email result on success. On failure, returns `502 Bad Gateway` (retryable errors) or `400 Bad Request` (non-retryable).
+
 ## Environment variables
 
 | Variable                                                                            | Description             |
@@ -108,6 +149,8 @@ Credentials are validated with Zod at config-load time from the `DB_*` environme
 | `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_SSL`             | PostgreSQL connection   |
 | `REDIS_URL`                                                                         | Redis connection string |
 | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION` | S3-compatible storage   |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`               | SMTP credentials        |
+| `GMAIL_EMAIL`                                                                       | Default sender email    |
 
 ## Project structure
 
@@ -117,6 +160,8 @@ Credentials are validated with Zod at config-load time from the `DB_*` environme
 ├── public/             # static assets
 ├── server/
 │   ├── database/       # Drizzle schema & client
+│   ├── lib/
+│   │   └── unemail/    # Email driver & utilities
 │   └── routes/         # route handlers
 │       └── api/        # /api-prefixed handlers
 ├── .env.example
