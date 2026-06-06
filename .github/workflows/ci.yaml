@@ -1,0 +1,36 @@
+name: CI
+
+on: push
+
+jobs:
+  ci:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Format files
+        run: pnpm fmt
+
+      - name: Lint files
+        run: pnpm lint
+
+      - name: Build application
+        run: pnpm build
