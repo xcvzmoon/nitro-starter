@@ -30,5 +30,8 @@
     "*.{js,ts,html,yaml,json,md}": "oxfmt",
     "*.{js,ts}": "oxlint"
   },
-  "packageManager": "pnpm@11.5.2"
+  "packageManager": "pnpm@11.5.2",
+  "dependencies": {
+    "zod": "^4.4.3"
+  }
 }
