@@ -1,6 +1,7 @@
 {
   "name": "nitro-starter",
   "description": "My personal Nitro starter template",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "build": "nitro build",
@@ -8,10 +9,15 @@
     "preview": "nitro preview",
     "fmt": "oxfmt",
     "lint": "oxlint",
-    "prepare": "husky"
+    "prepare": "husky",
+    "release:patch": "changelogen --patch --release && git push --follow-tags",
+    "release:minor": "changelogen --minor --release && git push --follow-tags",
+    "release:major": "changelogen --major --release && git push --follow-tags",
+    "release:dry": "changelogen --dry"
   },
   "devDependencies": {
     "@types/node": "latest",
+    "changelogen": "^0.6.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",
     "nitro": "latest",
