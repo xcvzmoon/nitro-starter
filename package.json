@@ -5,11 +5,17 @@
   "scripts": {
     "build": "nitro build",
     "dev": "nitro dev",
-    "preview": "nitro preview"
+    "preview": "nitro preview",
+    "fmt": "oxfmt",
+    "lint": "oxlint"
   },
   "devDependencies": {
     "@types/node": "latest",
     "nitro": "latest",
+    "oxfmt": "^0.53.0",
+    "oxlint": "^1.68.0",
+    "oxlint-tsgolint": "^0.23.0",
     "typescript": "latest"
-  }
+  },
+  "packageManager": "pnpm@11.5.2"
 }
