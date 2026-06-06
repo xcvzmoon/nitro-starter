@@ -23,9 +23,7 @@ Create your API and deploy it anywhere with this Nitro starter.
 Clone the repo, copy the environment file, install, and start developing:
 
 ```bash
-cp .env.example .env
-pnpm install
-pnpm dev
+pnpx giget gh:xcvzmoon/nitro-starter my-api-app --install
 ```
 
 Edit `.env` with your database, Redis, S3, and SMTP credentials as needed.
