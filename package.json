@@ -13,11 +13,23 @@
     "release:patch": "changelogen --patch --release && git push --follow-tags",
     "release:minor": "changelogen --minor --release && git push --follow-tags",
     "release:major": "changelogen --major --release && git push --follow-tags",
-    "release:dry": "changelogen --dry"
+    "release:dry": "changelogen --dry",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:pull": "drizzle-kit pull",
+    "db:studio": "drizzle-kit studio",
+    "db:check": "drizzle-kit check"
+  },
+  "dependencies": {
+    "drizzle-orm": "1.0.0-beta.22",
+    "drizzle-query-logger": "^1.1.2",
+    "postgres": "^3.4.9",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "latest",
     "changelogen": "^0.6.2",
+    "drizzle-kit": "1.0.0-beta.22",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",
     "nitro": "latest",
@@ -30,8 +42,5 @@
     "*.{js,ts,html,yaml,json,md}": "oxfmt",
     "*.{js,ts}": "oxlint"
   },
-  "packageManager": "pnpm@11.5.2",
-  "dependencies": {
-    "zod": "^4.4.3"
-  }
+  "packageManager": "pnpm@11.5.2"
 }
