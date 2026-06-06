@@ -1,0 +1,9 @@
+services:
+  nitro-starter:
+    image: nitro-starter:${IMAGE_TAG:-latest}
+    container_name: nitro-starter
+    build:
+      context: .
+    env_file: .env
+    ports:
+      - '${PORT:-3000}:${PORT:-3000}'

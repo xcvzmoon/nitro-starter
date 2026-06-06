@@ -14,12 +14,9 @@ Create your API and deploy it anywhere with this Nitro starter.
 - **SSE** — server-sent events via `server/routes/sse.ts`
 - **Email** — transactional email via [unemail](https://unemail.dev) with SMTP driver, retry, circuit breaker, and logging middleware
 - **Linting & formatting** — [oxc](https://oxc.rs/) toolchain: `oxfmt` for formatting, `oxlint` + `oxlint-tsgolint` for linting
+- **Docker** — containerized builds with automatic version tagging from `package.json`
 - **Changelog generation** — `changelogen` for automated releases
 - **Pre-commit hooks** — `husky` + `lint-staged` for auto-formatting and linting on commit
-
-### Planned
-
-- **Docker** — containerized development & deployment
 
 ## Getting started
 
@@ -35,22 +32,31 @@ Edit `.env` with your database, Redis, S3, and SMTP credentials as needed.
 
 ## Scripts
 
-| Command              | Description                  |
-| -------------------- | ---------------------------- |
-| `pnpm dev`           | Start development server     |
-| `pnpm build`         | Build for production         |
-| `pnpm preview`       | Preview production build     |
-| `pnpm fmt`           | Format all files with oxfmt  |
-| `pnpm lint`          | Lint all files with oxlint   |
-| `pnpm release:patch` | Bump patch version & release |
-| `pnpm release:minor` | Bump minor version & release |
-| `pnpm release:major` | Bump major version & release |
-| `pnpm release:dry`   | Dry-run changelog generation |
-| `pnpm db:generate`   | Generate database migration  |
-| `pnpm db:push`       | Push schema to database      |
-| `pnpm db:pull`       | Pull database schema         |
-| `pnpm db:studio`     | Open Drizzle Studio          |
-| `pnpm db:check`      | Check for pending migrations |
+| Command                   | Description                                                   |
+| ------------------------- | ------------------------------------------------------------- |
+| `pnpm dev`                | Start development server                                      |
+| `pnpm build`              | Build for production                                          |
+| `pnpm preview`            | Preview production build                                      |
+| `pnpm fmt`                | Format all files with oxfmt                                   |
+| `pnpm lint`               | Lint all files with oxlint                                    |
+| `pnpm release:patch`      | Bump patch version, release, and build Docker image           |
+| `pnpm release:minor`      | Bump minor version, release, and build Docker image           |
+| `pnpm release:major`      | Bump major version, release, and build Docker image           |
+| `pnpm release:dry`        | Dry-run changelog generation                                  |
+| `pnpm db:generate`        | Generate database migration                                   |
+| `pnpm db:push`            | Push schema to database                                       |
+| `pnpm db:pull`            | Pull database schema                                          |
+| `pnpm db:studio`          | Open Drizzle Studio                                           |
+| `pnpm db:check`           | Check for pending migrations                                  |
+| `pnpm docker`             | Run any `docker compose` command passthrough                  |
+| `pnpm docker:build`       | Build Docker image tagged with current `package.json` version |
+| `pnpm docker:config`      | Validate and view compose file                                |
+| `pnpm docker:up`          | Build and start container                                     |
+| `pnpm docker:up:detached` | Build and start container in background                       |
+| `pnpm docker:down`        | Stop and remove container                                     |
+| `pnpm docker:logs`        | Tail container logs                                           |
+| `pnpm docker:ps`          | List running containers                                       |
+| `pnpm docker:restart`     | Restart container                                             |
 
 ## Changelog
 
@@ -70,7 +76,7 @@ pnpm release:minor   # 0.0.1 → 0.1.0
 pnpm release:major   # 0.0.1 → 1.0.0
 ```
 
-Each command bumps the version, generates the changelog, creates a git tag, pushes both the commit and tag to the remote, and prints a link to create a GitHub Release from the new tag.
+Each command bumps the version, generates the changelog, creates a git tag, pushes both the commit and tag, then builds a Docker image tagged with the new version.
 
 ## Database
 
@@ -152,6 +158,38 @@ Returns the email result on success. On failure, returns `502 Bad Gateway` (retr
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`               | SMTP credentials        |
 | `GMAIL_EMAIL`                                                                       | Default sender email    |
 
+## Docker
+
+The project includes a `Dockerfile` and `compose.yaml` for containerized builds. The production image is based on `node:26-slim` — minimal and lightweight. The Docker image tag is derived from the `version` field in `package.json` — every image is tagged as `nitro-starter:<version>`.
+
+### How it works
+
+The `scripts/docker.ts` helper wraps `docker compose` and injects the current `package.json` version as the `IMAGE_TAG` environment variable. The `compose.yaml` uses that variable to set the image name:
+
+```yaml
+image: nitro-starter:${IMAGE_TAG:-latest}
+```
+
+This means:
+
+- Running `pnpm release:patch` (or `:minor`/`:major`) bumps the version in `package.json`, then builds a Docker image tagged with the new version
+- Running `pnpm docker:build` builds an image tagged with the current version (e.g., `nitro-starter:0.0.1`)
+- Running `docker compose` directly without the script falls back to `nitro-starter:latest`
+
+Environment variables are loaded from `.env` via `env_file` at runtime — secrets are never baked into the image.
+
+### Standalone usage
+
+```bash
+pnpm docker:build              # Build: nitro-starter:<current-version>
+pnpm docker:up                 # Build & start
+pnpm docker:up:detached        # Build & start in background
+pnpm docker:down               # Stop & remove
+pnpm docker:logs               # Tail logs
+pnpm docker:ps                 # List containers
+pnpm docker:restart            # Restart
+```
+
 ## Project structure
 
 ```
@@ -178,8 +216,23 @@ Returns the email result on success. On failure, returns `502 Bad Gateway` (retr
 
 ## Deploying
 
+### Standalone
+
 ```bash
 pnpm build
 ```
 
 Then checkout the [Nitro deployment docs](https://nitro.build/deploy) to learn more about the different deployment presets.
+
+### Docker
+
+```bash
+pnpm docker:build
+pnpm docker:up:detached
+```
+
+Or use a release script to bump the version and build in one step:
+
+```bash
+pnpm release:patch   # bumps version, pushes tag, builds docker image
+```
