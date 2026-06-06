@@ -21,6 +21,7 @@
     "db:check": "drizzle-kit check"
   },
   "dependencies": {
+    "aws4fetch": "^1.0.20",
     "drizzle-orm": "1.0.0-beta.22",
     "drizzle-query-logger": "^1.1.2",
     "ioredis": "^5.11.1",
