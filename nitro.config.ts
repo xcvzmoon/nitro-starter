@@ -20,4 +20,7 @@ export default defineConfig({
       region: process.env.S3_REGION,
     },
   },
+  unenv: {
+    external: ['@better-auth/kysely-adapter', '@opentelemetry/api', 'kysely'],
+  },
 });

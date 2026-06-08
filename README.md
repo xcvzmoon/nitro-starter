@@ -7,6 +7,7 @@ Create your API and deploy it anywhere with this Nitro starter.
 ## Features
 
 - **API routing** — file-based routes under `server/routes/`, auto-prefixed with `/api`
+- **Auth** — email/password authentication via [better-auth](https://better-auth.com) with Drizzle adapter
 - **Database** — PostgreSQL via Drizzle ORM, with query logging
 - **S3 storage** — Nitro storage driver for object storage
 - **Redis** — Nitro storage driver for caching
@@ -145,6 +146,62 @@ curl -X POST http://localhost:3000/api/email \
 ```
 
 Returns the email result on success. On failure, returns `502 Bad Gateway` (retryable errors) or `400 Bad Request` (non-retryable).
+
+## Auth
+
+Authentication is powered by [better-auth](https://better-auth.com) with a PostgreSQL adapter via Drizzle ORM. Email/password authentication is enabled by default.
+
+### How it works
+
+The `server/routes/api/auth/[...all].ts` catch-all route proxies all requests under `/api/auth/*` to the better-auth handler. This means better-auth manages its own routing — you don't need to define individual auth endpoints.
+
+The auth schema (`user`, `session`, `account`, `verification` tables) is defined in `server/database/schemas/public.ts` using the shared `id()` and `timestamps()` helpers. Relations are set up in `server/database/relations.ts` via `defineRelations`.
+
+Configuration lives in `server/lib/better-auth/auth.ts`:
+
+```ts
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+
+export const auth = betterAuth({
+  database: drizzleAdapter(db, { provider: 'pg', schema }),
+  emailAndPassword: { enabled: true },
+});
+```
+
+### Available endpoints
+
+Better-auth exposes the following endpoints automatically via the catch-all handler:
+
+| Method | Path                        | Description                 |
+| ------ | --------------------------- | --------------------------- |
+| POST   | `/api/auth/sign-in/email`   | Sign in with email/password |
+| POST   | `/api/auth/sign-up/email`   | Create a new account        |
+| POST   | `/api/auth/sign-out`        | Sign out current session    |
+| GET    | `/api/auth/session`         | Get current session         |
+| GET    | `/api/auth/ok`              | Health check                |
+| POST   | `/api/auth/forgot-password` | Request password reset      |
+| POST   | `/api/auth/reset-password`  | Reset password with token   |
+| PUT    | `/api/auth/account`         | Update account info         |
+
+### Sign-up body
+
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "securepassword"
+}
+```
+
+### Sign-in body
+
+```json
+{
+  "email": "john@example.com",
+  "password": "securepassword"
+}
+```
 
 ## Environment variables
 
