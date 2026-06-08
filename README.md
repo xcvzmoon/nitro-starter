@@ -252,11 +252,22 @@ pnpm docker:restart            # Restart
 ├── .husky/             # git hooks
 ├── public/             # static assets
 ├── server/
-│   ├── database/       # Drizzle schema & client
+│   ├── database/
+│   │   ├── config.ts   # validated database credentials
+│   │   ├── index.ts    # Drizzle client
+│   │   ├── relations.ts
+│   │   ├── schemas/    # Drizzle table schemas
+│   │   └── utils/      # shared schema helpers
 │   ├── lib/
+│   │   ├── better-auth/
 │   │   └── unemail/    # Email driver & utilities
-│   └── routes/         # route handlers
-│       └── api/        # /api-prefixed handlers
+│   ├── middleware/     # request middleware
+│   ├── routes/         # route handlers
+│   │   ├── api/        # /api-prefixed handlers
+│   │   │   └── auth/   # Better Auth catch-all route
+│   │   ├── sse.ts
+│   │   └── ws.ts
+│   └── types/          # table types and H3 augmentations
 ├── .env.example
 ├── .nvmrc
 ├── AGENTS.md
